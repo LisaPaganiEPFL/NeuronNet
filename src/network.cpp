@@ -128,3 +128,109 @@ void Network::print_traj(const int time, const std::map<std::string, size_t> &_n
             }
     (*_out) << std::endl;
 }
+
+std::pair<size_t, double> Network::degree(const size_t& n) const{
+	
+	double intensity(0);
+	size_t link(0);
+	
+	std::map<std::pair<size_t,size_t>, double>::const_iterator itlow,itup;
+	
+	
+	itlow = links.lower_bound (std::make_pair(n,0));  
+    itup = links.upper_bound (std::make_pair(n+1,0));
+    
+    for (itlow; itlow!=itup; ++itlow){
+		link += 1;
+		intensity += itlow->second;
+	}
+	
+	/*for (auto it = links.begin(); it != links.end(); ++it){
+		if(it->first.first == n){
+			intensity += it->second;
+			++link;
+		}
+	}*/
+	
+	return std::make_pair(link,intensity);
+}
+std::vector<std::pair<size_t, double> > Network::neighbors(const size_t& n) const{
+	
+	/*std::vector<std::pair<size_t, double> > neighbors_;
+	for (auto it = links.begin(); it != links.end(); ++it){
+		if(it->first.first == n){
+			neighbors_.push_back(std::make_pair(it->first.second,it->second));
+		}
+	}
+	
+	return neighbors_;*/
+	
+	std::vector<std::pair<size_t, double> > neighbors_;
+	std::map<std::pair<size_t,size_t>, double>::const_iterator itlow,itup;
+	
+	
+	itlow = links.lower_bound (std::make_pair(n,0));  
+    itup = links.upper_bound (std::make_pair(n+1,0)); 
+    
+    for (itlow; itlow!=itup; ++itlow){
+		neighbors_.push_back(std::make_pair(itlow->first.second,itlow->second));
+	}
+	
+	return neighbors_;
+	
+
+	
+	
+}
+std::set<size_t> Network::step(const std::vector<double>& vector){
+	
+	std::set<size_t> firing_;
+	
+	double sum_inhib(0);
+	double sum_excit(0);
+	double I(0);
+	double w(1);
+	
+		
+	for(size_t i(0); i < neurons.size(); ++i){
+		if(!neurons[i].firing()){
+			std::vector<std::pair<size_t, double> > neigh(neighbors(i));
+			
+			sum_inhib = 0;
+			sum_excit = 0;
+			I = 0;
+			
+			for(auto& el : neigh){
+				if(neurons[el.first].firing()){
+					if(!neurons[el.first].is_inhibitory()){
+						sum_excit += el.second;
+					}else{
+						sum_inhib += el.second;
+					}
+				}
+			}
+			
+			if(neurons[i].is_inhibitory()){
+				w = 0.4;
+			}else{
+				w = 1;
+			}
+			
+			I = w*vector[i] + 0.5*sum_excit +sum_inhib;
+			neurons[i].input(I);
+		
+		}
+	}
+	
+	for(size_t i(0); i < neurons.size(); ++i){
+		if(neurons[i].firing()){
+			firing_.insert(i);
+			neurons[i].reset();
+		}else{
+			neurons[i].step();
+		}
+				
+	}
+	
+	return firing_;
+}
