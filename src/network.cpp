@@ -171,11 +171,12 @@ std::set<size_t> Network::step(const std::vector<double>& vector){
 	
 	std::set<size_t> firing_;
 	
-	std::vector<bool> firing_bool(neurons.size());
+	std::vector<bool> firing_bool(neurons.size(),false);
 	
 	for(size_t i(0); i < neurons.size(); ++i){
 		if(neurons[i].firing()){
 			firing_bool[i] = true;
+			firing_.insert(i);
 			neurons[i].reset();
 		}
 	}
@@ -215,12 +216,6 @@ std::set<size_t> Network::step(const std::vector<double>& vector){
 			neurons[i].step();
 	}
 	
-	for(size_t i(0); i < firing_bool.size(); ++i){
-		if(firing_bool[i]){
-			firing_.insert(i);
-		}
-	}
-
 	
 	return firing_;
 }
