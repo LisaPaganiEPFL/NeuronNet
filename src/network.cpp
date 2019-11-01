@@ -211,6 +211,7 @@ std::set<size_t> Network::step(const std::vector<double>& vector){
 			}
 			
 			I = w*vector[i] + 0.5*sum_excit +sum_inhib;
+			
 			neurons[i].input(I);
 		
 			neurons[i].step();
